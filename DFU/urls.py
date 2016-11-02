@@ -15,11 +15,15 @@ Including another URLconf
 """
 from django.conf.urls import url
 from django.contrib import admin
-from django.conf.urls import include, url
 
+from django.conf.urls.static import static
+
+from . import views
+
+app_name = 'DFU'
 urlpatterns = [
-    url(r'^NRK/DFU/', include('DFU.urls')),
-    url(r'^NRK/ContentMgr/', include('ContentMgr.urls')),
-    url(r'^NRK/AAA/', include('AAA.urls')),
-    url(r'^admin/', admin.site.urls),
+    # ex: /DFU/version
+    url(r'^version/$', views.get_version, name='get_version'),
+    # ex: /DFU/upgrade/
+    url(r'^upgrade/$', views.upgrade, name='upgrade'),
 ]

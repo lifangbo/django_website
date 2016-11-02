@@ -15,11 +15,23 @@ Including another URLconf
 """
 from django.conf.urls import url
 from django.contrib import admin
-from django.conf.urls import include, url
 
+from django.conf.urls.static import static
+
+from . import views
+
+app_name = 'AAA'
 urlpatterns = [
-    url(r'^NRK/DFU/', include('DFU.urls')),
-    url(r'^NRK/ContentMgr/', include('ContentMgr.urls')),
-    url(r'^NRK/AAA/', include('AAA.urls')),
-    url(r'^admin/', admin.site.urls),
+    # ex: /AAA/user
+    url(r'^user/$', views.user, name='user'),
+    # ex: /AAA/user/<ID>
+    url(r'^user/(?P<user_id>[0-9]+)/$', views.user_id, name='user_id'),
+    # ex: /AAA/user/<ID>/password
+    url(r'^user/(?P<user_id>[0-9]+)/password/$', views.password, name='password'),
+    # ex: /AAA/user/login
+    url(r'^user/login/$', views.login, name='login'),
+    # ex: /AAA/user/login
+    url(r'^user/logout/$', views.logout, name='logout'),
+    # ex: /AAA/user/add
+    url(r'^user/add/$', views.user_add, name='user_add'),
 ]

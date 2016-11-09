@@ -54,7 +54,7 @@ def upgrade(request):
     else:
         path = firmWare.path
 
-    path = '/downloads' + path
+    path = '/home/docker/data' + path
     #path = './static/visa.jpg'
 
     return TransferHttpResponse(path)

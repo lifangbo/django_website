@@ -138,6 +138,6 @@ TRANSFER_SERVER = 'nginx'
 #When nginx receives the header ``X-Accel-Redirect: /downloads/foo/bar.png``
 #it will transfer ``'/mnt/shared/downloads/foo/bar.png'`` to the client.
 TRANSFER_MAPPINGS = {
-        #'/home/docker/data': '/downloads',
-    '/downloads': '/home/docker/data',
+    '/home/docker/data': '/downloads',
+    #'/downloads': '/home/docker/data',
 }

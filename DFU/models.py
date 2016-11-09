@@ -4,15 +4,16 @@ from datetime import date, datetime, time
 from django.db import models
 
 # Create your models here.
+FRIMWARE_TYPE_ARR = ('enduro', 'bte_3g', 'bluetooth_3g')
 FRIMWARE_TYPE = (
-    (1, 'enduro'),
-    (2, 'bte_3g'),
-    (3, 'bluetooth_3g'),
+    (1, 'enduro', '/enduro.bin'),
+    (2, 'bte_3g', '/bte_3g.bin'),
+    (3, 'bluetooth_3g', '/bluetooth_3g.bin'),
 )
 
 
 class FirmwarePool(models.Model):
-    type = models.CharField(editable=False, primary_key=True, choices=FRIMWARE_TYPE, max_length=15)
+    type = models.CharField(editable=False, primary_key=True, max_length=15)
     version = models.CharField(editable=False, max_length=15)  #V99.99
     size = models.IntegerField(editable=False, blank=True)
     path = models.FilePathField(editable=False, blank=True)
@@ -27,8 +28,8 @@ class FirmwarePool(models.Model):
 
 def FirmwarePoolInit():
     if FirmwarePool.objects.count() == 0:
-        for id , type in FRIMWARE_TYPE:
-            FirmwarePool.objects.create(type = type, version='1.0', size = 1, build_date=datetime.now(),uploaded_date=datetime.now())
+        for id , type, path in FRIMWARE_TYPE:
+            FirmwarePool.objects.create(type = type, path = path, version='1.0', size = 1, build_date=datetime.now(),uploaded_date=datetime.now())
     return
 
 

@@ -129,7 +129,15 @@ STATICFILES_DIRS = (
     os.path.join(BASE_DIR, "polls/static/"),
 )
 
-STATICFILES_FINDERS = (
-    "django.contrib.staticfiles.finders.FileSystemFinder",
-    "django.contrib.staticfiles.finders.AppDirectoriesFinder"
-)
+
+# Django settings for django_transfer project.
+ENABLE_TRANSFER = True
+
+TRANSFER_SERVER = 'nginx'
+
+#When nginx receives the header ``X-Accel-Redirect: /downloads/foo/bar.png``
+#it will transfer ``'/mnt/shared/downloads/foo/bar.png'`` to the client.
+TRANSFER_MAPPINGS = {
+        #'/home/docker/data': '/downloads',
+    '/downloads': '/home/docker/data',
+}

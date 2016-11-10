@@ -2,6 +2,8 @@ from jsonview.decorators import json_view
 from utils import statusCode
 from .models import FirmwarePool, FirmwarePoolInit,FRIMWARE_TYPE_ARR
 from transfer import TransferHttpResponse
+from django.conf import settings
+import json
 
 # Create your views here.
 # NRK/DFU/version/
@@ -31,7 +33,7 @@ def _ret_wrapped(status):
 
 # NRK/DFU/upgrade/
 def upgrade(request):
-    if request.method != "POST":
+    if request.method != "GET" and request.method != "POST":
         return _ret_wrapped(statusCode.NRK_INVALID_OPERA_INVALID_METHOD)
 
     firmware_type = request.GET.get('type', False)
@@ -54,7 +56,20 @@ def upgrade(request):
     else:
         path = firmWare.path
 
-    path = '/home/docker/data' + path
+    root, location = settings.TRANSFER_MAPPINGS.items()[0]
+
+    path = root + path
     #path = './static/visa.jpg'
 
-    return TransferHttpResponse(path)
+    #download request
+    if request.method == "GET":
+        return TransferHttpResponse(path)
+
+    #else POST means upload request
+    if firmware_type == 'enduro':
+        return _ret_wrapped({"URI":request.path, "body":request.body})
+    elif firmware_type == 'bte_3g':
+        return _ret_wrapped(request.POST)
+    else:
+        return _ret_wrapped(request.FILES)
+

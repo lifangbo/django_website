@@ -182,9 +182,9 @@ sample configuration.
         upload_pass @application;
 
         # The path below must exist, so must subdirectories named 0-9
-        # $ mkdir -p /mnt/shared/uploads/{0-9}
+        # $ mkdir -p /mnt/shared/uploads/{0..9}
         upload_store /mnt/shared/uploads 1;
-        upload_store_access user:r;
+        upload_store_access user:rw;
 
         # You can limit file size here...
         upload_max_file_size 0;

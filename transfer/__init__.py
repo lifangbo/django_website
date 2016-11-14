@@ -1,4 +1,5 @@
 from __future__ import unicode_literals
+from django.utils.deprecation import MiddlewareMixin
 
 import os
 import shutil
@@ -103,7 +104,7 @@ class ProxyUploadedFile(UploadedFile):
         shutil.move(self.path, dst)
 
 
-class TransferMiddleware(object):
+class TransferMiddleware(MiddlewareMixin):
     def process_request(self, request):
         if request.method != 'POST':
             return
@@ -142,7 +143,7 @@ class TransferMiddleware(object):
                 except (KeyError, ValueError):
                     content_types = {}
                 try:
-                    sizes = dict((request.POST.pop('%s[size]' % field)))
+                    sizes = dict(enumerate(request.POST.pop('%s[size]' % field)))
                 except (KeyError, ValueError):
                     sizes = {}
                 # Iterating over possible multiple files

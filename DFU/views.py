@@ -3,6 +3,10 @@ from utils import statusCode
 from .models import FirmwarePool, FirmwarePoolInit,FRIMWARE_TYPE_ARR
 from transfer import TransferHttpResponse
 from django.conf import settings
+from django.http import HttpResponse
+from datetime import datetime
+from os import renames, remove
+from os.path import exists
 import json
 
 # Create your views here.
@@ -65,11 +69,50 @@ def upgrade(request):
     if request.method == "GET":
         return TransferHttpResponse(path)
 
-    #else POST means upload request
-    if firmware_type == 'enduro':
-        return _ret_wrapped({"URI":request.path, "body":request.body})
-    elif firmware_type == 'bte_3g':
-        return _ret_wrapped(request.POST)
-    else:
-        return _ret_wrapped(request.FILES)
+    # else POST means upload request
+    new_version = request.GET.get('version', False)
+    # upload a firmware operation must specified a version.
+    if new_version == False:
+        return _ret_wrapped(statusCode.NRK_INVALID_PARAM_UNKNOWN_ERR)
+
+    major_new, bracket, minor_new = new_version.partition('.')
+    major_old, bracket, minor_old = firmWare.version.partition('.')
+
+    if minor_new < minor_old:
+        return _ret_wrapped(statusCode.NRK_INVALID_PARAM_UNKNOWN_ERR)
+
+    for name in request.FILES.keys():
+        data = request.FILES.getlist(name)
+
+        #Only one file will be allowed to be uploaded to server each time.
+        if len(data) != 1:
+            return _ret_wrapped(statusCode.NRK_INVALID_PARAM_UNKNOWN_ERR)
+
+
+        file = data[0]
+        file.close()   #close at first, or a {32 errorno} will be raised
+
+        firmWare.size = file.size
+        firmWare.version = new_version
+        firmWare.uploaded_date = datetime.now()
+        firmWare.build_date = datetime.now()
+
+        #path = './static/visa2.jpg'   #for test purpose only
+        if exists(path):
+            try :
+                remove(path)
+            except:
+                return _ret_wrapped(statusCode.NRK_SERVER_ERR)
+
+        try :
+            renames(file.path, path)
+        except :
+            return _ret_wrapped(statusCode.NRK_SERVER_ERR)
+
+        try :
+            firmWare.save()
+        except :
+            return _ret_wrapped(statusCode.NRK_SERVER_ERR)
+
+        return _ret_wrapped(statusCode.NRK_OK)
 

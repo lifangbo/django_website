@@ -7,7 +7,7 @@ import tempfile
 from django.http import HttpResponse
 import six
 
-from django_transfer import TransferHttpResponse
+from transfer import TransferHttpResponse
 
 
 def make_tempfile(data=None):

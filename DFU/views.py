@@ -8,10 +8,12 @@ from datetime import datetime
 from os import renames, remove
 from os.path import exists
 import json
+from utils.auth import auth_login_required, auth_administrator_required,check_perms,user_check_test
 
 # Create your views here.
 # NRK/DFU/version/
 @json_view
+@auth_login_required
 def get_version(request):
     if request.method != "GET":
         return statusCode.NRK_INVALID_OPERA_INVALID_METHOD
@@ -36,6 +38,8 @@ def _ret_wrapped(status):
 
 
 # NRK/DFU/upgrade/
+#@auth_administrator_required
+@user_check_test(check_perms)
 def upgrade(request):
     if request.method != "GET" and request.method != "POST":
         return _ret_wrapped(statusCode.NRK_INVALID_OPERA_INVALID_METHOD)

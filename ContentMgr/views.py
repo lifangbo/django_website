@@ -4,7 +4,7 @@ from utils import statusCode
 from .models import *
 from datetime import datetime, date, timedelta, time
 import json
-
+from utils.auth import auth_login_required, auth_administrator_required,check_perms,user_check_test
 
 # Retrieve event type Macro definition
 RetrievePoweron = 1
@@ -16,6 +16,8 @@ RetrieveMode = 4
 # Create your views here.
 # NRK/ContentMgr/logging/
 @json_view
+#@auth_administrator_required
+@user_check_test(check_perms)
 def logging(request):
     if request.method != "POST":
         return statusCode.NRK_INVALID_OPERA_INVALID_METHOD
@@ -25,6 +27,7 @@ def logging(request):
 
 # NRK/ContentMgr/retrieve/
 @json_view
+@auth_login_required
 def retrieve(request):
     if request.method != "GET":
         return statusCode.NRK_INVALID_OPERA_INVALID_METHOD
@@ -157,6 +160,7 @@ def retrieve_entry(request, retrieve_evt=RetrievePoweron):
 
 # NRK/ContentMgr/retrieve/poweron/
 @json_view
+@auth_login_required
 def retrieve_poweron(request):
     if request.method != "POST":
         return statusCode.NRK_INVALID_OPERA_INVALID_METHOD
@@ -166,6 +170,7 @@ def retrieve_poweron(request):
 
 # NRK/ContentMgr/retrieve/map/
 @json_view
+@auth_login_required
 def retrieve_map(request):
     if request.method != "POST":
         return statusCode.NRK_INVALID_OPERA_INVALID_METHOD
@@ -175,6 +180,7 @@ def retrieve_map(request):
 
 # NRK/ContentMgr/retrieve/input_sel/
 @json_view
+@auth_login_required
 def retrieve_input_sel(request):
     if request.method != "POST":
         return statusCode.NRK_INVALID_OPERA_INVALID_METHOD
@@ -184,6 +190,7 @@ def retrieve_input_sel(request):
 
 # NRK/ContentMgr/retrieve/mode/
 @json_view
+@auth_login_required
 def retrieve_mode(request):
     if request.method != "POST":
         return statusCode.NRK_INVALID_OPERA_INVALID_METHOD

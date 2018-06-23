@@ -1,7 +1,7 @@
 
 from jsonview.decorators import json_view
 from utils import statusCode
-from utils.auth import auth_login_required, auth_administrator_required,check_perms,user_check_test
+from utils.auth import auth_login_required, auth_administrator_required
 from .models import user_ext
 from .forms import AAAPasswordChangeForm, AAAUserCreationForm, AAAUserChangeForm
 from django.contrib.auth import login as update_session_auth_hash
@@ -12,8 +12,11 @@ from django.views.decorators.cache import never_cache
 # Create your views here.
 # /NRK/AAA/user
 @json_view
-@auth_login_required
 def user(request):
+    # Only Administrator can get user list.
+    if not request.user.is_superuser:
+        return statusCode.NRK_INVALID_OPERA_LOW_PRIVILEGE
+
     user_list = user_ext.objects.values('id', 'username').order_by('id')
     return list(user_list)
 
@@ -22,6 +25,10 @@ def user(request):
 @json_view
 @auth_login_required
 def user_id(request, user_id):
+    # Administrator can get/change any user's infomation, but normal users can only get/change its own information.
+    if (not request.user.is_superuser) and (request.user.id != int(user_id)):
+        return statusCode.NRK_INVALID_OPERA_LOW_PRIVILEGE
+
     if request.method == "GET":
         try:
             user_info = user_ext.objects.filter(pk=user_id).values()
@@ -31,7 +38,7 @@ def user_id(request, user_id):
             return statusCode.NRK_INVALID_PARAM_UNKNOWN_ERR
         else:
             return user_info[0]
-    #change the specified user's information
+    # change the specified user's information
     elif request.method == "PUT":
         if request.content_type == 'application/json':
             http_body = json.loads(request.body)
@@ -108,8 +115,7 @@ def logout(request):
 
 # /NRK/AAA/user/add
 @json_view
-#@auth_administrator_required
-@user_check_test(check_perms)
+@auth_administrator_required
 def user_add(request):
     if request.method != "POST":
         return statusCode.NRK_INVALID_OPERA_INVALID_METHOD

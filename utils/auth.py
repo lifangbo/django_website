@@ -16,7 +16,7 @@ def user_check_test(test_func):
         def _wrapped_view(request, *args, **kwargs):
             if test_func(request):
                 return view_func(request, *args, **kwargs)
-            return statusCode.NRK_INVALID_OPERA_LOW_PRIVILEGE
+            return statusCode.NRK_INVALID_PARAM_USR_PWD_ERR
 
         return _wrapped_view
 
@@ -36,19 +36,19 @@ def auth_login_required(function=None):
     return actual_decorator
 
 
-def check_perms(request):
-    if request.method == "GET":
-        return request.user.is_authenticated
-    else:
-        return request.user.is_active and request.user.is_superuser
+def auth_administrator_required(view_func):
+    def check_perms(request):
+        if request.method == "GET":
+            return request.user.is_authenticated
+        else:
+            return request.user.is_active and request.user.is_superuser
 
+    @wraps(view_func, assigned=available_attrs(view_func))
+    def _wrapped_view(request, *args, **kwargs):
+        if check_perms(request):
+            return view_func(request, *args, **kwargs)
+        else:
+            return statusCode.NRK_INVALID_OPERA_LOW_PRIVILEGE
+    return _wrapped_view
 
-def auth_administrator_required(function=None):
-    """
-    Decorator for views that checks whether a user has a particular permission
-    enabled, redirecting to the log-in page if necessary.
-    If the raise_exception parameter is given the PermissionDenied exception
-    is raised.
-    """
-    return user_check_test(check_perms)
 

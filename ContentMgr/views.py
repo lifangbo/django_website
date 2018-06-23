@@ -4,7 +4,7 @@ from utils import statusCode
 from .models import *
 from datetime import datetime, date, timedelta, time
 import json
-from utils.auth import auth_login_required, auth_administrator_required,check_perms,user_check_test
+from utils.auth import auth_login_required, auth_administrator_required
 
 # Retrieve event type Macro definition
 RetrievePoweron = 1
@@ -16,8 +16,7 @@ RetrieveMode = 4
 # Create your views here.
 # NRK/ContentMgr/logging/
 @json_view
-#@auth_administrator_required
-@user_check_test(check_perms)
+@auth_administrator_required
 def logging(request):
     if request.method != "POST":
         return statusCode.NRK_INVALID_OPERA_INVALID_METHOD

@@ -96,7 +96,7 @@ class AAAUserCreationForm(forms.ModelForm):
 
     class Meta:
         model = user_ext
-        fields = ("username", "phone_number")
+        fields = ("username", "phone_number", "is_staff", "is_active")
         field_classes = {'username': UsernameField}
 
     def clean_password(self):

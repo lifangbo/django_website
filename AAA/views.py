@@ -16,7 +16,6 @@ def user(request):
     # Only Administrator can get user list.
     if not request.user.is_superuser:
         return statusCode.NRK_INVALID_OPERA_LOW_PRIVILEGE
-
     user_list = user_ext.objects.values('id', 'username').order_by('id')
     return list(user_list)
 
@@ -115,14 +114,17 @@ def logout(request):
 
 # /NRK/AAA/user/add
 @json_view
-@auth_administrator_required
+# @auth_administrator_required
 def user_add(request):
     if request.method != "POST":
         return statusCode.NRK_INVALID_OPERA_INVALID_METHOD
 
     form = AAAUserCreationForm(data=request.POST)
     if form.is_valid():
-        form.save()
+        new_user = form.save(commit = False)
+        new_user.is_staff = True
+        new_user.is_active = True
+        new_user.save()
         return statusCode.NRK_OK
     else:
         if form.has_error('username'):

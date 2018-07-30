@@ -20,6 +20,17 @@ def user(request):
     return list(user_list)
 
 
+# Obtain user own information
+# /NRK/AAA/user/userInfo
+@json_view
+@auth_login_required
+def user_info(request):
+    if request.method != "GET":
+        return statusCode.NRK_INVALID_OPERA_INVALID_METHOD
+
+    return get_user_info(request.user.id)
+
+
 # /NRK/AAA/user/1
 @json_view
 @auth_login_required
@@ -29,14 +40,8 @@ def user_id(request, user_id):
         return statusCode.NRK_INVALID_OPERA_LOW_PRIVILEGE
 
     if request.method == "GET":
-        try:
-            user_info = user_ext.objects.filter(pk=user_id).values()
-        except user_ext.DoesNotExist:
-            return statusCode.NRK_INVALID_PARAM_ID_ERR
-        except:
-            return statusCode.NRK_INVALID_PARAM_UNKNOWN_ERR
-        else:
-            return user_info[0]
+        return get_user_info(user_id)
+
     # change the specified user's information
     elif request.method == "PUT":
         if request.content_type == 'application/json':
@@ -44,7 +49,14 @@ def user_id(request, user_id):
         else:
             return statusCode.NRK_INVALID_PARAM_UNKNOWN_ERR
 
-        form = AAAUserChangeForm(data = http_body)
+        try:
+            user_info = user_ext.objects.get(pk=user_id)
+        except user_ext.DoesNotExist:
+            return statusCode.NRK_INVALID_PARAM_ID_ERR
+        except:
+            return statusCode.NRK_INVALID_PARAM_UNKNOWN_ERR
+
+        form = AAAUserChangeForm(data = http_body, instance=user_info)
         if form.is_valid():
             form.save()
             return statusCode.NRK_OK
@@ -60,6 +72,9 @@ def user_id(request, user_id):
 def password(request, user_id):
     if request.method != "POST":
         return statusCode.NRK_INVALID_OPERA_INVALID_METHOD
+
+    if request.user.id != int(user_id):
+        return statusCode.NRK_INVALID_OPERA_LOW_PRIVILEGE
 
     form = AAAPasswordChangeForm(user=request.user, data=request.POST)
     if form.is_valid():
@@ -102,7 +117,7 @@ def login(request):
 @json_view
 @auth_login_required
 def logout(request):
-    if request.method != "POST":
+    if request.method != "GET":
         return statusCode.NRK_INVALID_OPERA_INVALID_METHOD
 
     from django.contrib.auth import logout as auth_logout
@@ -151,3 +166,20 @@ def parse_pwd_validate_err(form, field):
     else:
         return statusCode.NRK_INVALID_PARAM_USR_PWD_ERR
 
+
+# Obtain user information according to specific user id.
+def get_user_info(user_id):
+    try:
+        field_names = [f.attname for f in user_ext.objects.model._meta.concrete_fields]
+        field_names.remove('password')            # password information should be hidden
+        field_names.remove('user_ptr_id')
+        user_own = user_ext.objects.filter(pk=user_id).values(*field_names)
+    except user_ext.DoesNotExist:
+        return statusCode.NRK_INVALID_PARAM_ID_ERR
+    except:
+        return statusCode.NRK_INVALID_PARAM_UNKNOWN_ERR
+    else:
+        if user_own is None:
+            return statusCode.NRK_INVALID_PARAM_NULL_ENTRY
+        else:
+            return user_own[0]          # Assert should be have and only have one entry.

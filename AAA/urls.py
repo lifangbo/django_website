@@ -34,4 +34,6 @@ urlpatterns = [
     url(r'^user/logout/$', views.logout, name='logout'),
     # ex: /AAA/user/add
     url(r'^user/add/$', views.user_add, name='user_add'),
+    # ex: /AAA/user/userInfo
+    url(r'^user/userInfo/$', views.user_info, name='user_info'),
 ]

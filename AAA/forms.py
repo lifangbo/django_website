@@ -119,7 +119,8 @@ class AAAUserChangeForm(forms.ModelForm):
     class Meta:
         model = user_ext
         #fields = '__all__'
-        exclude = ('is_superuser','date_joined', 'last_login', 'id', 'user_ptr_id', 'password', 'username')
+        exclude = ('is_superuser','date_joined', 'last_login', 'id', 'user_ptr_id', 'password', 'username', 'is_active')
         field_classes = {'username': UsernameField}
+
 
 

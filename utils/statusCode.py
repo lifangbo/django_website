@@ -15,6 +15,7 @@ NRK_INVALID_OPERA_LOW_PRIVILEGE = {MAJOR_STATUS:'invalid_operation', MINOR_STATU
 
 NRK_INVALID_PARAM_UNKNOWN_ERR = { MAJOR_STATUS:'Invalid_parameter' ,MINOR_STATUS:'unknow_err'}, 400
 NRK_INVALID_PARAM_ID_ERR = {MAJOR_STATUS:'Invalid_parameter', MINOR_STATUS:'invalid_id'}, 400
+NRK_INVALID_PARAM_NULL_ENTRY = {MAJOR_STATUS:'Invalid_parameter', MINOR_STATUS:'null_entry'}, 400
 NRK_INVALID_PARAM_USR_PWD_ERR_MSG = {MAJOR_STATUS:'Invalid_parameter', MINOR_STATUS:'user_passwd_err'}
 NRK_INVALID_PARAM_USR_PWD_ERR = {MAJOR_STATUS:'Invalid_parameter', MINOR_STATUS:'user_passwd_err'}, 400
 NRK_INVALID_PARAM_PWD_TOO_SHORT = {MAJOR_STATUS:'Invalid_parameter', MINOR_STATUS:'password_too_short'}, 400

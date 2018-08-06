@@ -34,4 +34,6 @@ urlpatterns = [
     url(r'^retrieve/input_sel/$', views.retrieve_input_sel, name='retrieve_input_sel'),
     # ex: /ContentMgr/retrieve/mode/
     url(r'^retrieve/mode/$', views.retrieve_mode, name='retrieve_mode'),
+    # ex: /ContentMgr/retrieve/environment/
+    url(r'^retrieve/environment/$', views.retrieve_environment, name='retrieve_environment'),
 ]

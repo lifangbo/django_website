@@ -2,6 +2,7 @@
 from functools import wraps
 from django.utils.decorators import available_attrs
 from utils import statusCode
+import json
 
 
 def user_check_test(test_func):
@@ -52,3 +53,13 @@ def auth_administrator_required(view_func):
     return _wrapped_view
 
 
+def json_convert(request):
+    httpbody = {}
+
+    if request.content_type != 'application/json':
+        return httpbody
+
+    try:
+        httpbody = json.loads(request.body)
+    finally:
+        return httpbody

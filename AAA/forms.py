@@ -82,6 +82,7 @@ class UsernameField(forms.CharField):
     def to_python(self, value):
         return unicodedata.normalize('NFKC', super(UsernameField, self).to_python(value))
 
+
 class AAAUserCreationForm(forms.ModelForm):
     """
     A form that creates a user, with no privileges, from the given (username or phone_number) and

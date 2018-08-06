@@ -18,7 +18,6 @@ def get_version(request):
     if request.method != "GET":
         return statusCode.NRK_INVALID_OPERA_INVALID_METHOD
 
-    FirmwarePoolInit()
     firmware_type = request.GET.get('type', False)
 
     if firmware_type not in  FRIMWARE_TYPE_ARR:

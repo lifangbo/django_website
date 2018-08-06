@@ -1,5 +1,3 @@
 /.svn/
 *.pyc
-migrations/
 /.idea/
-/polls/

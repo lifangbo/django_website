@@ -1,7 +1,7 @@
 
 from jsonview.decorators import json_view
 from utils import statusCode
-from utils.auth import auth_login_required, auth_administrator_required
+from utils.auth import auth_login_required, auth_administrator_required, json_convert
 from .models import user_ext
 from .forms import AAAPasswordChangeForm, AAAUserCreationForm, AAAUserChangeForm
 from django.contrib.auth import login as update_session_auth_hash
@@ -44,11 +44,6 @@ def user_id(request, user_id):
 
     # change the specified user's information
     elif request.method == "PUT":
-        if request.content_type == 'application/json':
-            http_body = json.loads(request.body)
-        else:
-            return statusCode.NRK_INVALID_PARAM_UNKNOWN_ERR
-
         try:
             user_info = user_ext.objects.get(pk=user_id)
         except user_ext.DoesNotExist:
@@ -56,7 +51,7 @@ def user_id(request, user_id):
         except:
             return statusCode.NRK_INVALID_PARAM_UNKNOWN_ERR
 
-        form = AAAUserChangeForm(data = http_body, instance=user_info)
+        form = AAAUserChangeForm(data = json_convert(request), instance=user_info)
         if form.is_valid():
             form.save()
             return statusCode.NRK_OK
@@ -76,7 +71,7 @@ def password(request, user_id):
     if request.user.id != int(user_id):
         return statusCode.NRK_INVALID_OPERA_LOW_PRIVILEGE
 
-    form = AAAPasswordChangeForm(user=request.user, data=request.POST)
+    form = AAAPasswordChangeForm(user=request.user, data=json_convert(request))
     if form.is_valid():
         form.save()
         # Updating the password logs out all other sessions for the user
@@ -104,7 +99,7 @@ def login(request):
     from django.contrib.admin.forms import AdminAuthenticationForm
     from django.contrib.auth import login as auth_login
 
-    form = AdminAuthenticationForm(request, data=request.POST)
+    form = AdminAuthenticationForm(request, data=json_convert(request))
     if form.is_valid():
         auth_login(request, form.get_user())
         return statusCode.NRK_OK
@@ -134,7 +129,7 @@ def user_add(request):
     if request.method != "POST":
         return statusCode.NRK_INVALID_OPERA_INVALID_METHOD
 
-    form = AAAUserCreationForm(data=request.POST)
+    form = AAAUserCreationForm(data=json_convert(request))
     if form.is_valid():
         new_user = form.save(commit = False)
         new_user.is_staff = True

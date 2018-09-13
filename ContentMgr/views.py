@@ -23,10 +23,16 @@ def logging(request):
     if request.method != "POST":
         return statusCode.NRK_INVALID_OPERA_INVALID_METHOD
 
-    log_list = json_convert(request)
+    log_list = []
+    log_entries = json_convert(request)
 
-    if log_list is None:
+    if log_entries is None:
         return statusCode.NRK_INVALID_PARAM_NULL_ENTRY
+
+    if isinstance(log_entries, dict):
+        log_list.append(log_entries)
+    else:
+        log_list = log_entries
 
     for log in log_list:
         log_form = ContentMgrLoggingForm(data=log)

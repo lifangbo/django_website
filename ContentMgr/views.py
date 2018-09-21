@@ -345,7 +345,7 @@ def retrieve_entry(request, retrieve_evt=RetrievePoweron):
 @json_view
 @auth_login_required
 def retrieve_poweron(request):
-    if request.method != "GET":
+    if request.method != "GET" and request.method != "POST":
         return statusCode.NRK_INVALID_OPERA_INVALID_METHOD
 
     return retrieve_entry(request, RetrievePoweron)
@@ -355,7 +355,7 @@ def retrieve_poweron(request):
 @json_view
 @auth_login_required
 def retrieve_map(request):
-    if request.method != "GET":
+    if request.method != "GET" and request.method != "POST":
         return statusCode.NRK_INVALID_OPERA_INVALID_METHOD
 
     return retrieve_entry(request, RetrieveMap)
@@ -365,7 +365,7 @@ def retrieve_map(request):
 @json_view
 @auth_login_required
 def retrieve_input_sel(request):
-    if request.method != "GET":
+    if request.method != "GET"and request.method != "POST":
         return statusCode.NRK_INVALID_OPERA_INVALID_METHOD
 
     return retrieve_entry(request, RetrieveInputSel)
@@ -375,7 +375,7 @@ def retrieve_input_sel(request):
 @json_view
 @auth_login_required
 def retrieve_mode(request):
-    if request.method != "GET":
+    if request.method != "GET"and request.method != "POST":
         return statusCode.NRK_INVALID_OPERA_INVALID_METHOD
 
     return retrieve_entry(request, RetrieveMode)
@@ -385,7 +385,7 @@ def retrieve_mode(request):
 @json_view
 @auth_login_required
 def retrieve_environment(request):
-    if request.method != "GET":
+    if request.method != "GET"and request.method != "POST":
         return statusCode.NRK_INVALID_OPERA_INVALID_METHOD
 
     return retrieve_entry(request, RetrieveEnvironment)

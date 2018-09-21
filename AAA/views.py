@@ -65,7 +65,7 @@ def user_id(request, user_id):
 @json_view
 @auth_login_required
 def password(request, user_id):
-    if request.method != "POST":
+    if request.method != "PUT":
         return statusCode.NRK_INVALID_OPERA_INVALID_METHOD
 
     if request.user.id != int(user_id):

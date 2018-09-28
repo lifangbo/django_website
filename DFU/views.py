@@ -8,7 +8,7 @@ from datetime import datetime
 from os import renames, remove
 from os.path import exists
 import json
-from utils.auth import auth_login_required, auth_administrator_required
+from utils.auth import auth_login_required, auth_administrator_required, ret_code_json_wrapped
 
 # Create your views here.
 # NRK/DFU/version/
@@ -30,27 +30,22 @@ def get_version(request):
 
     return firmWare[0]
 
-#if you return a status code wrapped by json_view directly , a error will be showed, so wrapped is.
-@json_view
-def _ret_wrapped(status):
-    return status
-
 
 # NRK/DFU/upgrade/
 @auth_administrator_required
 def upgrade(request):
     if request.method != "GET" and request.method != "POST":
-        return _ret_wrapped(statusCode.NRK_INVALID_OPERA_INVALID_METHOD)
+        return ret_code_json_wrapped(statusCode.NRK_INVALID_OPERA_INVALID_METHOD)
 
     firmware_type = request.GET.get('type', False)
 
     if firmware_type not in FRIMWARE_TYPE_ARR:
-        return _ret_wrapped(statusCode.NRK_INVALID_PARAM_UNKNOWN_ERR)
+        return ret_code_json_wrapped(statusCode.NRK_INVALID_PARAM_UNKNOWN_ERR)
 
     try:
         firmWare = FirmwarePool.objects.get(type=firmware_type)
     except:
-        return _ret_wrapped(statusCode.NRK_SERVER_ERR)
+        return ret_code_json_wrapped(statusCode.NRK_SERVER_ERR)
 
     if firmWare.path == '':
         if firmware_type == 'enduro':
@@ -75,20 +70,21 @@ def upgrade(request):
     new_version = request.GET.get('version', False)
     # upload a firmware operation must specified a version.
     if new_version == False:
-        return _ret_wrapped(statusCode.NRK_INVALID_PARAM_UNKNOWN_ERR)
+        return ret_code_json_wrapped(statusCode.NRK_INVALID_PARAM_UNKNOWN_ERR)
 
     major_new, bracket, minor_new = new_version.partition('.')
     major_old, bracket, minor_old = firmWare.version.partition('.')
 
-    if minor_new < minor_old:
-        return _ret_wrapped(statusCode.NRK_INVALID_PARAM_UNKNOWN_ERR)
+    # FIX ME!!! Here assumption that #minor_version will be nerver greater than 99
+    if (major_new*100+minor_new) < (major_old*100+minor_old):
+        return ret_code_json_wrapped(statusCode.NRK_INVALID_PARAM_UNKNOWN_ERR)
 
     for name in request.FILES.keys():
         data = request.FILES.getlist(name)
 
         #Only one file will be allowed to be uploaded to server each time.
         if len(data) != 1:
-            return _ret_wrapped(statusCode.NRK_INVALID_PARAM_UNKNOWN_ERR)
+            return ret_code_json_wrapped(statusCode.NRK_INVALID_PARAM_UNKNOWN_ERR)
 
 
         file = data[0]
@@ -104,17 +100,17 @@ def upgrade(request):
             try :
                 remove(path)
             except:
-                return _ret_wrapped(statusCode.NRK_SERVER_ERR)
+                return ret_code_json_wrapped(statusCode.NRK_SERVER_ERR)
 
         try :
             renames(file.path, path)
         except :
-            return _ret_wrapped(statusCode.NRK_SERVER_ERR)
+            return ret_code_json_wrapped(statusCode.NRK_SERVER_ERR)
 
         try :
             firmWare.save()
         except :
-            return _ret_wrapped(statusCode.NRK_SERVER_ERR)
+            return ret_code_json_wrapped(statusCode.NRK_SERVER_ERR)
 
-        return _ret_wrapped(statusCode.NRK_OK)
+        return ret_code_json_wrapped(statusCode.NRK_OK)
 

@@ -6,9 +6,9 @@ from django.db import models
 # Create your models here.
 FRIMWARE_TYPE_ARR = ('enduro', 'bte_3g', 'bluetooth_3g')
 FRIMWARE_TYPE = (
-    (1, 'enduro', '/DFU/enduro.bin'),
-    (2, 'bte_3g', '/DFU/bte_3g.bin'),
-    (3, 'bluetooth_3g', '/DFU/bluetooth_3g.bin'),
+    (1, 'enduro', '/enduro.bin'),
+    (2, 'bte_3g', '/bte_3g.bin'),
+    (3, 'bluetooth_3g', '/bluetooth_3g.bin'),
 )
 
 

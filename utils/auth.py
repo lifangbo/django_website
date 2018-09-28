@@ -3,7 +3,7 @@ from functools import wraps
 from django.utils.decorators import available_attrs
 from utils import statusCode
 import json
-from jsonview.decorators import json_view
+
 
 def user_check_test(test_func):
     """
@@ -63,9 +63,3 @@ def json_convert(request):
         httpbody = json.loads(request.body)
     finally:
         return httpbody
-
-
-#if you return a status code wrapped by json_view directly , a error will be showed, so wrapped is.
-@json_view
-def ret_code_json_wrapped(statusCode):
-    return statusCode

@@ -18,7 +18,6 @@ from django.contrib import admin
 from django.conf.urls import include, url
 
 urlpatterns = [
-    url(r'^NRK/Fitting/', include('Fitting.urls')),
     url(r'^NRK/DFU/', include('DFU.urls')),
     url(r'^NRK/ContentMgr/', include('ContentMgr.urls')),
     url(r'^NRK/AAA/', include('AAA.urls')),

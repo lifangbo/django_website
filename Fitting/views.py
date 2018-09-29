@@ -4,9 +4,10 @@ from .models import *
 from transfer import TransferHttpResponse
 from django.conf import settings
 from datetime import datetime, date
-from os import renames, remove
+from os import mknod
 from os.path import exists
 from utils.auth import auth_login_required, ret_code_json_wrapped, json_convert
+import shutil
 
 
 # Create your views here.
@@ -68,9 +69,9 @@ def record(request):
             record_path = root + record_path
             # record_path = './static/visa.jpg'   #for test purpose only
 
-            if exists(record_path):
+            if not exists(record_path):
                 try:
-                    remove(record_path)
+                    mknod(record_path, 0o777)
                 except:
                     return ret_code_json_wrapped(statusCode.NRK_SERVER_ERR)
 
@@ -81,14 +82,14 @@ def record(request):
             new_record.uploaded_date = datetime.now()
 
             try:
-                renames(file.path, record_path)
+                shutil.copyfile(file.path, record_path)
             except:
                 return ret_code_json_wrapped(statusCode.NRK_SERVER_ERR)
 
             try:
                 new_record.save()
             except:
-                return ret_code_json_wrapped(statusCode.NRK_SERVER_ERR)
+                return ret_code_json_wrapped(statusCode.NRK_SERVER_BUSY)
 
             return ret_code_json_wrapped(statusCode.NRK_OK)
 

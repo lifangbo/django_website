@@ -5,10 +5,11 @@ from transfer import TransferHttpResponse
 from django.conf import settings
 from django.http import HttpResponse
 from datetime import datetime
-from os import renames, remove
+from os import mknod
 from os.path import exists
-import json
 from utils.auth import auth_login_required, auth_administrator_required, ret_code_json_wrapped
+import shutil
+
 
 # Create your views here.
 # NRK/DFU/version/
@@ -96,21 +97,21 @@ def upgrade(request):
         firmWare.build_date = datetime.now()
 
         #path = './static/visa2.jpg'   #for test purpose only
-        if exists(path):
-            try :
-                remove(path)
+        if not exists(path):
+            try:
+                mknod(path, 0o777)
             except:
                 return ret_code_json_wrapped(statusCode.NRK_SERVER_ERR)
 
         try :
-            renames(file.path, path)
+            shutil.copyfile(file.path, path)
         except :
             return ret_code_json_wrapped(statusCode.NRK_SERVER_ERR)
 
         try :
             firmWare.save()
         except :
-            return ret_code_json_wrapped(statusCode.NRK_SERVER_ERR)
+            return ret_code_json_wrapped(statusCode.NRK_SERVER_BUSY)
 
         return ret_code_json_wrapped(statusCode.NRK_OK)
 

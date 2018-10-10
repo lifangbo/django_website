@@ -7,11 +7,14 @@ import datetime
 from django.utils.translation import ugettext_lazy as _
 
 
+VERIFY_TYPE = {'register', 'password'}
+
+
 # Create your models here.
 class user_ext(User):
     birthday = models.DateField(_('date bithed'), default = datetime.date.today)
 
-    phone_number = models.CharField(_('phone number'), max_length=16, blank=True)
+    phone_number = models.CharField(_('phone number'), max_length=16, unique=True, blank=False)
 
     is_male = models.BooleanField(_('gender'),default=False)
 
@@ -24,3 +27,11 @@ class user_ext(User):
 
     def __str__(self):
         return self.id, self.birthday, self.phone_number, self.is_male
+
+
+class SmsVerify(models.Model):
+    phone_number = models.CharField(max_length=40, unique=True)
+    verify = models.CharField(max_length=20)
+    passcode = models.CharField(max_length=10, blank=True)
+    valid_expires = models.DateTimeField(null=True, blank=True)
+    locked_expires = models.DateTimeField(null=True, blank=True)

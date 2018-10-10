@@ -22,6 +22,8 @@ from . import views
 
 app_name = 'AAA'
 urlpatterns = [
+    # ex: /AAA/verify
+    url(r'^verify/$', views.short_message_verify, name='SmsVerify'),
     # ex: /AAA/user
     url(r'^user/$', views.user, name='user'),
     # ex: /AAA/user/<ID>
@@ -36,4 +38,6 @@ urlpatterns = [
     url(r'^user/add/$', views.user_add, name='user_add'),
     # ex: /AAA/user/userInfo
     url(r'^user/userInfo/$', views.user_info, name='user_info'),
+   # ex: /AAA/user/resetPassword
+    url(r'^user/resetPassword/$', views.reset_password, name='reset_password'),
 ]

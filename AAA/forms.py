@@ -4,6 +4,7 @@ from django.contrib.auth import password_validation
 from .models import user_ext
 import unicodedata
 from django.utils.translation import ugettext, ugettext_lazy as _
+import re
 
 
 class AAASetPasswordForm(forms.Form):
@@ -78,6 +79,7 @@ class AAAReadOnlyPasswordHashField(forms.Field):
     def has_changed(self, initial, data):
         return False
 
+
 class UsernameField(forms.CharField):
     def to_python(self, value):
         return unicodedata.normalize('NFKC', super(UsernameField, self).to_python(value))
@@ -107,6 +109,17 @@ class AAAUserCreationForm(forms.ModelForm):
 
         return password
 
+    def clean_phone_number(self):
+        phone_number = self.cleaned_data.get("phone_number")
+
+        if not validate_mobile_phonenumber(phone_number):
+            raise forms.ValidationError(
+                self.error_messages['phone_number_incorrect'],
+                code='phone_number_incorrect',
+            )
+
+        return phone_number
+
     def save(self, commit=True):
         user = super(AAAUserCreationForm, self).save(commit=False)
         user.set_password(self.cleaned_data["password"])
@@ -124,4 +137,12 @@ class AAAUserChangeForm(forms.ModelForm):
         field_classes = {'username': UsernameField}
 
 
+def validate_mobile_phonenumber(phone_number):
+    '''Validate the specified mobile phone number.
+    @return: True: if mobile phone is valid, otherwise return False'''
+    rule = re.compile(r'^[+0-9]{1,3}[0-9]{10,11}$')
+    if rule.search(phone_number):
+        return True
+
+    return False
 

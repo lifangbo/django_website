@@ -2,11 +2,15 @@
 from jsonview.decorators import json_view
 from utils import statusCode
 from utils.auth import auth_login_required, auth_administrator_required, json_convert
-from .models import user_ext
-from .forms import AAAPasswordChangeForm, AAAUserCreationForm, AAAUserChangeForm
+from .models import *
+from .forms import AAAPasswordChangeForm, AAAUserCreationForm, AAAUserChangeForm, validate_mobile_phonenumber, \
+    AAASetPasswordForm
 from django.contrib.auth import login as update_session_auth_hash
-import json
+from django.utils import timezone
 from django.views.decorators.cache import never_cache
+import random
+import string
+from dysms.demo_sms_send import sms_send_passcode
 
 
 # Create your views here.
@@ -89,6 +93,40 @@ def password(request, user_id):
             return statusCode.NRK_INVALID_PARAM_UNKNOWN_ERR
 
 
+# /NRK/AAA/user/resetPassword
+@json_view
+def reset_password(request):
+    if request.method != "PUT":
+        return statusCode.NRK_INVALID_OPERA_INVALID_METHOD
+
+    request.POST = json_convert(request)
+
+    if 'passcode'not in request.POST or 'phone_number'not in request.POST:
+        return statusCode.NRK_INVALID_PARAM_PARAMETERS_ABSENT
+
+    passcode = request.POST['passcode']
+    phone_number = request.POST['phone_number']
+
+    ret_code = check_passcode(phone_number, passcode)
+    if ret_code != statusCode.NRK_OK:
+        return ret_code
+
+    try:
+        user_entry = user_ext.objects.get(phone_number=phone_number)
+    except:
+        return statusCode.NRK_SERVER_ERR
+
+    form = AAASetPasswordForm(user=user_entry, data=request.POST)
+    if form.is_valid():
+        form.save()
+        return statusCode.NRK_OK
+    else:
+        if form.has_error('new_password'):
+            return parse_pwd_validate_err(form, 'new_password')
+        else:
+            return statusCode.NRK_INVALID_PARAM_UNKNOWN_ERR
+
+
 # /NRK/AAA/user/login
 @never_cache
 @json_view
@@ -99,7 +137,23 @@ def login(request):
     from django.contrib.admin.forms import AdminAuthenticationForm
     from django.contrib.auth import login as auth_login
 
-    form = AdminAuthenticationForm(request, data=json_convert(request))
+    request.POST = json_convert(request)
+
+    username_exist = ('username' in request.POST)
+    phone_number_exist = ('phone_number' in request.POST)
+
+    if not username_exist and not phone_number_exist:
+        return statusCode.NRK_INVALID_PARAM_PARAMETERS_ABSENT
+
+    if not username_exist:
+        phone_number = request.POST['phone_number']
+        try:
+            user_entry = user_ext.objects.get(phone_number=phone_number)
+            request.POST['username'] = user_entry.username
+        except:
+            return statusCode.NRK_SERVER_ERR
+
+    form = AdminAuthenticationForm(request, data=request.POST)
     if form.is_valid():
         auth_login(request, form.get_user())
         return statusCode.NRK_OK
@@ -129,7 +183,27 @@ def user_add(request):
     if request.method != "POST":
         return statusCode.NRK_INVALID_OPERA_INVALID_METHOD
 
-    form = AAAUserCreationForm(data=json_convert(request))
+    request.POST = json_convert(request)
+
+    # First, Check passcode is exist and valid
+    if 'passcode' not in request.POST:
+        return statusCode.NRK_INVALID_PARAM_PARAMETERS_ABSENT
+
+    if 'phone_number' not in request.POST:
+        return statusCode.NRK_INVALID_PARAM_PARAMETERS_ABSENT
+
+    passcode = request.POST['passcode']
+    phone_number = request.POST['phone_number']
+
+    ret_code = check_passcode(phone_number, passcode)
+    if ret_code != statusCode.NRK_OK:
+        return ret_code
+
+    # if 'username' is not specified, make one randomly. should be keep unique in database.
+    if 'username' not in request.POST:
+        request.POST['username'] = 'nrkid_' + ''.join(random.choice(string.letters + string.digits) for _ in range(14))
+
+    form = AAAUserCreationForm(data=request.POST)
     if form.is_valid():
         new_user = form.save(commit = False)
         new_user.is_staff = True
@@ -145,6 +219,87 @@ def user_add(request):
             return statusCode.NRK_INVALID_PARAM_UNKNOWN_ERR
         else:
             return statusCode.NRK_INVALID_PARAM_UNKNOWN_ERR
+
+
+# /NRK/AAA/verify
+@json_view
+def short_message_verify(request):
+    if request.method != "POST":
+        return statusCode.NRK_INVALID_OPERA_INVALID_METHOD
+
+    request.POST = json_convert(request)
+
+    try:
+        phone_number = request.POST['phone_number']
+        verify = request.POST['verify']
+    except:
+        return statusCode.NRK_INVALID_PARAM_PARAMETERS_ABSENT
+
+    if not validate_mobile_phonenumber(phone_number):
+        return statusCode.NRK_INVALID_PARAM_PARAMETERS_INVALID
+
+    if verify not in VERIFY_TYPE:
+        return statusCode.NRK_INVALID_PARAM_PARAMETERS_INVALID
+
+    try:
+        user_entry = user_ext.objects.get(phone_number=phone_number)
+        user_exist = user_entry.is_active
+    except user_ext.DoesNotExist:
+        user_exist = False
+    except :
+        return statusCode.NRK_SERVER_ERR
+
+    if verify == 'password' and (not user_exist):
+        return statusCode.NRK_INVALID_PARAM_USER_NOT_EXIST
+
+    if verify == 'register' and user_exist:
+        return statusCode.NRK_INVALID_PARAM_USER_ALREADY_EXIST
+
+    try:
+        verify_entry = SmsVerify.objects.get(phone_number=phone_number)
+        verify_user_exist = True
+    except SmsVerify.DoesNotExist:
+        verify_entry = SmsVerify(phone_number=phone_number, verify=verify)
+        verify_user_exist = False
+    except:
+        return statusCode.NRK_SERVER_ERR
+
+    passcode_update = True
+    if verify_user_exist:
+        # protect from violence attack
+        if verify_entry.locked_expires > timezone.make_aware(datetime.datetime.today(), timezone.get_default_timezone()):
+            return statusCode.NRK_SERVER_BUSY
+
+        # Because of congestion possibility of SMS, send the same passcode in #valid_expires times.
+        if verify_entry.valid_expires > timezone.make_aware(datetime.datetime.today(), timezone.get_default_timezone()):
+            passcode_update = False
+
+    if  passcode_update:
+        # create passcode and send response
+        pl = random.sample([1, 2, 3, 4, 5, 6, 7, 8, 9, 0], 4)
+        passcode = ''.join(str(p) for p in pl)
+
+        verify_entry.passcode = passcode
+        verify_entry.valid_expires = timezone.make_aware(datetime.datetime.today() + datetime.timedelta(minutes=5),
+                                                         timezone.get_default_timezone())
+
+    # update lock expire time after each verify request.
+    verify_entry.locked_expires = timezone.make_aware(datetime.datetime.today() + datetime.timedelta(minutes=1),
+                                                      timezone.get_default_timezone())
+
+    verify_entry.verify = verify
+
+    # Send the generated passcode to client through SMS server.
+    ret, code = sms_send_passcode(phone_number, verify_entry.passcode)
+    if not ret:
+        return statusCode.err_response_with_messages(statusCode.NRK_SERVER_ERR, code)
+
+    try:
+        verify_entry.save()
+    except:
+        statusCode.NRK_SERVER_ERR
+
+    return statusCode.NRK_OK
 
 
 '''precommit:if form.has_error('password') is not None:
@@ -178,3 +333,22 @@ def get_user_info(user_id):
             return statusCode.NRK_INVALID_PARAM_NULL_ENTRY
         else:
             return user_own[0]          # Assert should be have and only have one entry.
+
+
+# Check passcode is correct
+def check_passcode(phone_number, passcode):
+    try:
+        verify_entry = SmsVerify.objects.get(phone_number=phone_number)
+    except:
+        return statusCode.NRK_SERVER_ERR
+
+    if passcode != verify_entry.passcode:
+        return statusCode.NRK_INVALID_PARAM_PASSCODE_INVALID
+
+    if verify_entry.valid_expires < timezone.make_aware(datetime.datetime.today(), timezone.get_default_timezone()):
+        return statusCode.NRK_INVALID_PARAM_PASSCODE_EXPIRED
+
+    return statusCode.NRK_OK
+
+
+

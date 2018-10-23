@@ -28,6 +28,7 @@ NRK_INVALID_PARAM_USER_ALREADY_EXIST = {MAJOR_STATUS:'Invalid_parameter', MINOR_
 NRK_INVALID_PARAM_USER_NOT_EXIST = {MAJOR_STATUS:'Invalid_parameter', MINOR_STATUS:'user_does_not_exist'}, 400
 NRK_INVALID_PARAM_PARAMETERS_ABSENT = {MAJOR_STATUS:'Invalid_parameter', MINOR_STATUS:'request_parameters_absent'}, 400
 NRK_INVALID_PARAM_PARAMETERS_INVALID = {MAJOR_STATUS:'Invalid_parameter', MINOR_STATUS:'invalid_parameters_value'}, 400
+NRK_INVALID_PARAM_PARAMETERS_INVALID = {MAJOR_STATUS:'Invalid_parameter', MINOR_STATUS:'invalid_parameters_value'}, 400
 NRK_INVALID_PARAM_PASSCODE_EXPIRED = {MAJOR_STATUS:'Invalid_parameter', MINOR_STATUS:'passcode_expires'}, 400
 NRK_INVALID_PARAM_PASSCODE_INVALID = {MAJOR_STATUS:'Invalid_parameter', MINOR_STATUS:'passcode_invalid'}, 400
 

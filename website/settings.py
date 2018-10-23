@@ -31,6 +31,7 @@ ALLOWED_HOSTS = ['*']
 # Application definition
 
 INSTALLED_APPS = [
+    'Fitting.apps.FittingConfig',
     'DFU.apps.DfuConfig',
     'ContentMgr.apps.ContentmgrConfig',
     'AAA.apps.AaaConfig',
